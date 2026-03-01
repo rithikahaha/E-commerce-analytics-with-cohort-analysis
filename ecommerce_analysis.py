@@ -272,6 +272,94 @@ def cohort_retention_analysis(df):
     return retention_rates
 
 
+def rfm_analysis(df):
+    """
+    RFM (Recency, Frequency, Monetary) segmentation.
+    Scores each customer 1-5 on each dimension.
+    - Recency: how recently did they buy? (lower days = better = higher score)
+    - Frequency: how many orders did they make? (higher = better)
+    - Monetary: how much did they spend in total? (higher = better)
+    """
+    # Set snapshot date as one day after last order
+    # (so recency is meaningful relative to the dataset, not today's date)
+    snapshot_date = df['order_purchase_timestamp'].max() + pd.Timedelta(days=1)
+
+    # Calculate R, F, M for each customer
+    rfm = df.groupby('customer_unique_id').agg({
+        'order_purchase_timestamp': 'max',
+        'order_id': 'count',
+        'payment_value': 'sum'
+    }).rename(columns={
+        'order_purchase_timestamp': 'last_purchase',
+        'order_id': 'frequency',
+        'payment_value': 'monetary'
+    })
+
+    # Recency = days since last purchase
+    rfm['recency'] = (snapshot_date - rfm['last_purchase']).dt.days
+    rfm.drop(columns=['last_purchase'], inplace=True)
+
+    # Score each metric 1-5
+    # Recency is reversed: fewer days = score 5 (better)
+    # Frequency and Monetary: higher = score 5 (better)
+    rfm['r_score'] = pd.qcut(rfm['recency'], q=5, labels=[5, 4, 3, 2, 1])
+    rfm['f_score'] = pd.qcut(rfm['frequency'].rank(method='first'), q=5, labels=[1, 2, 3, 4, 5])
+    rfm['m_score'] = pd.qcut(rfm['monetary'], q=5, labels=[1, 2, 3, 4, 5])
+
+    # Combined RFM score (max 15)
+    rfm['rfm_score'] = (rfm['r_score'].astype(int) +
+                        rfm['f_score'].astype(int) +
+                        rfm['m_score'].astype(int))
+
+    # Segment labels based on combined score
+    def label_segment(score):
+        if score >= 13:
+            return 'Champion'
+        elif score >= 10:
+            return 'Loyal'
+        elif score >= 7:
+            return 'At Risk'
+        else:
+            return 'Lost'
+
+    rfm['segment'] = rfm['rfm_score'].apply(label_segment)
+
+    print("\nRFM Segments:")
+    print(rfm['segment'].value_counts())
+    print(f"\nAverage RFM metrics by segment:")
+    print(rfm.groupby('segment')[['recency', 'frequency', 'monetary']].mean().round(2))
+
+    # Visualization
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Segment distribution
+    segment_counts = rfm['segment'].value_counts()
+    colors = ['#4169e1', '#90ee90', '#ffd700', '#ff6347']
+    axes[0].bar(segment_counts.index, segment_counts.values,
+                color=colors, edgecolor='black')
+    axes[0].set_title('RFM Customer Segments', fontsize=14, fontweight='bold')
+    axes[0].set_xlabel('Segment')
+    axes[0].set_ylabel('Number of Customers')
+    for i, v in enumerate(segment_counts.values):
+        axes[0].text(i, v + 50, str(v), ha='center', fontweight='bold')
+
+    # Average monetary value by segment
+    avg_monetary = rfm.groupby('segment')['monetary'].mean().sort_values(ascending=False)
+    axes[1].bar(avg_monetary.index, avg_monetary.values,
+                color=colors, edgecolor='black')
+    axes[1].set_title('Average Spend by Segment', fontsize=14, fontweight='bold')
+    axes[1].set_xlabel('Segment')
+    axes[1].set_ylabel('Average Spend (BRL)')
+    for i, v in enumerate(avg_monetary.values):
+        axes[1].text(i, v + 10, f'{v:.0f}', ha='center', fontweight='bold')
+
+    plt.tight_layout()
+    plt.savefig('rfm_segments.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+    return rfm
+
+
 def main():
     """Execute full analysis pipeline"""
     print("="*60)
@@ -302,8 +390,11 @@ def main():
     
     print("\n[6/7] Cohort retention analysis...")
     retention = cohort_retention_analysis(df)
+
+    print("\n[7/7] RFM segmentation...")
+    rfm = rfm_analysis(df)
     
-    print("\n[7/7] Analysis complete!")
+    print("\n[8/8] Analysis complete!")
     print("\nGenerated visualizations:")
     print("  - monthly_revenue.png")
     print("  - customer_segments.png")
@@ -311,6 +402,7 @@ def main():
     print("  - geographic_analysis.png")
     print("  - satisfaction_correlation.png")
     print("  - cohort_retention.png")
+    print("  - rfm_segments.png")
     
     print("\n" + "="*60)
     print("Pipeline finished successfully")
@@ -328,7 +420,6 @@ def main():
     print(f"Total Revenue: BRL {total_revenue:,.2f}")
     print(f"Total Orders: {total_orders:,}")
     print(f"Repeat Customer Rate: {repeat_rate:.2f}%")
-
 
 
 if __name__ == "__main__":
