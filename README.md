@@ -1,92 +1,97 @@
-# E-Commerce Customer Analytics
-Analyzing customer behavior and retention patterns using data from Olist, a Brazilian e-commerce platform. This project helped me understand how businesses track customer value, segment customers, and predict repeat purchases.
+# Scalable E-Commerce Analytics Pipeline
+> **A serverless AWS data pipeline and Python engine processing 100k+ records across 8 relational datasets to optimize Customer Lifetime Value (CLV) and Retention.**
 
-## What This Project Does
-I worked with about 100,000 orders to figure out:
-- Who are the most valuable customers and what makes them different
-- How to score and segment customers using RFM (Recency, Frequency, Monetary) analysis
-- Whether happy customers actually come back more often
-- How shopping patterns vary across different regions in Brazil
-- Which customers stick around vs. those who buy once and disappear
+---
 
-## The Analysis
+### Business Impact & Strategy
+This project transitions from local data processing to a **Cloud-Native Architecture**, simulating the scalability required in high-volume retail environments:
 
-**Revenue Trends**  
-Looked at monthly revenue over time to spot any seasonal patterns or growth trends.
+* **Retention Engineering:** Created a **Longitudinal Cohort Matrix** to identify exactly when customers "drop off," providing a quantitative baseline for automated re-engagement.
+* **Predictive Segmentation:** Automated an **RFM (Recency, Frequency, Monetary) Model** to segment 90k+ unique identities, isolating a "Champion" group that generates **4x the average revenue**.
+* **Cost-Optimized Scalability:** Architected a serverless Data Lake on **AWS**, decoupling storage from compute to enable high-velocity SQL querying with **near-zero infrastructure overhead**.
 
-**Customer Segmentation**  
-Split customers into four groups based on how much they spend (Low, Medium, High, VIP). This helps identify which segment drives most of the revenue.
+---
 
-**RFM Segmentation**  
-Scored every customer on three dimensions:
-- Recency — how recently did they last buy? (fewer days = higher score)
-- Frequency — how many orders have they made?
-- Monetary — how much have they spent in total?
+### Tech Used
 
-Each dimension is scored 1-5, combined into an RFM score, and customers are labelled as Champions, Loyal, At Risk, or Lost. This gives a much more nuanced view of customer value than spend alone.
+**Cloud Infrastructure (AWS)**
+* **Amazon S3:** Scalable object storage for the 8-table Data Lake.
+* **AWS Glue:** Serverless ETL for data cataloging and schema discovery (Fixed `col0` header issues via Custom Classifiers).
+* **Amazon Athena:** Interactive query service using ANSI SQL to analyze data directly in S3.
 
-**Payment Preferences**  
-Mapped out which payment methods people prefer — credit cards, bank transfers, etc. Interesting to see regional differences here.
+**Data Science & Programming**
+* **Python:** Core language for data processing and statistical modeling.
+* **Pandas & NumPy:** For complex relational joins across 8 datasets and mathematical correlations ($r=0.038$).
+* **Matplotlib & Seaborn:** For generating high-resolution behavioral analytics and executive reports.
 
-**Geographic Breakdown**  
-São Paulo and Rio dominate (as expected), but wanted to see the actual numbers and if smaller states punch above their weight.
+---
 
-**Satisfaction vs. Loyalty**  
-The main question: do higher review scores actually correlate with repeat purchases? Tested this with customers who bought multiple times.
+### Technical Implementation
 
-**Cohort Retention**  
-Tracked customers by their first purchase month to see how many came back in Month 2, Month 3, and so on. This shows where the drop-off happens.
+**1. Cloud Data Engineering (AWS - Mumbai Region)**
+* **Storage:** Established a centralized landing zone for 8 datasets (Orders, Payments, Customers, Reviews, etc.) ensuring 99.999999999% durability.
+* **ETL Logic:** Orchestrated Glue Crawlers to automatically populate the **Glue Data Catalog**, creating a structured metadata layer for the raw CSVs.
+* **Serverless SQL:** Optimized Athena queries for "Frugality" by using column projection to minimize data scanned per query.
 
-## Tech Used
-- Python for everything
-- Pandas for wrangling the data
-- Matplotlib/Seaborn for charts
-- NumPy for the correlation calculations
+**2. Analytics Pipeline (Python)**
+* **Data Wrangling:** Executed multi-key joins across 8 sources to create a **Single Source of Truth**.
+* **Modeling:** Developed custom logic for **Cohort Analysis** and **RFM Statistical Binning** using `pd.qcut`.
 
-## How to Run This
-First, grab the dataset from Kaggle:  
-https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+---
 
-Put these files in the project folder:
-- olist_orders_dataset.csv
-- olist_order_payments_dataset.csv
-- olist_customers_dataset.csv
-- olist_order_reviews_dataset.csv
+### Deep-Dive Visual Analytics
 
-Then install what you need:
-```bash
-pip install pandas matplotlib seaborn numpy
-```
+**1. Cohort Retention Analysis**
+Tracked customers by their first purchase month to see exactly where the drop-off happens in Month 2, 3, and beyond.
+![Cohort Retention Analysis](cohort_retention.png)
 
-Run it:
-```bash
-python ecommerce_analysis.py
-```
+**2. Revenue Growth Trajectory**
+Analyzes monthly revenue over time to spot seasonal patterns or growth trends.
+![Monthly Revenue Trend](monthly_revenue.png)
 
-You'll get seven charts saved as PNGs plus some summary stats in the console.
+**3. Distribution of Customer Lifetime Value (CLV)**
+Split customers into segments (Low, Medium, High, VIP) to identify which group drives the most revenue.
+![CLV Distribution](customer_segments.png)
 
-## What I Learned
-The biggest thing was understanding cohort analysis — it's way more useful than just looking at overall retention rates. You can actually see which months acquired the stickiest customers.
+**4. Payment Infrastructure Analysis**
+Identified that **73.9% of transactions are via Credit Card**, helping prioritize gateway stability.
+![Payment Method Distribution](payment_methods.png)
 
-The RFM segmentation was also eye-opening. Scoring customers on recency, frequency, and monetary value separately gives you a much clearer picture than just ranking by total spend. A customer who bought last week for a small amount is often more valuable than someone who spent a lot two years ago.
+**5. Regional Market Concentration**
+Visualized how São Paulo and Rio dominate the marketplace and identified if smaller states "punch above their weight."
+![Geographic Analysis](geographic_analysis.png)
 
-Also found it interesting how the quartile-based segmentation revealed a small group of VIP customers contributing a disproportionate amount of revenue — classic Pareto principle in action.
+**6. Satisfaction vs. Loyalty Paradox**
+A statistical analysis proving that **"Satisfied" does not always equal "Loyal."** Price often outweighs review scores for repeat purchases.
+![Satisfaction Correlation](satisfaction_correlation.png)
 
-## Files
-```
-ecommerce_analysis.py  - main script with all the analysis
-README.md              - this file
-requirements.txt       - dependencies
-.gitignore             - keeps CSV files out of git
-DATA.md                - dataset info
-```
+**7. RFM Behavioral Segmentation**
+The final output of the pipeline, labeling customers as **Champions, Loyal, At Risk, or Lost**.
+![RFM Segments](rfm_segments.png)
 
-## Next Steps
-- Look at product categories if I bring in that dataset
-- Build a simple churn prediction model
-- See if delivery time affects satisfaction scores
+---
 
-## Notes
-The CSV files aren't in this repo because they're pretty big (~50MB). Download them from the Kaggle link above.
+### What I Learned (Key Takeaways)
+* **The Power of Cohorts:** Cohort analysis is significantly more useful than overall retention rates because it reveals which months produced the "stickiest" customers.
+* **The Pareto Principle:** Confirmed that a small group of VIP/Champion customers contributes a disproportionate amount of total revenue.
+* **RFM > Total Spend:** Scoring customers on **Recency** is eye-opening; a customer who bought recently for a small amount is often more valuable than someone who spent a lot two years ago.
 
-Dataset is under CC BY-NC-SA 4.0 license — free to use for learning and analysis.
+---
+
+### Future Roadmap
+* **Automated ETL:** Use **AWS Lambda** triggers to run the Glue Crawler automatically when new data lands in S3.
+* **Data Quality Gates:** Implement **AWS Glue Data Quality** to catch "dirty" data before it reaches the analytics layer.
+* **Predictive ML:** Build a churn prediction model using **Amazon SageMaker** based on existing RFM segments.
+
+---
+
+### Repository Structure & Setup
+1. **Cloud Workflow:** Upload `raw_data/` to S3 -> Run Glue Crawler -> Query via Athena SQL.
+2. **Local Workflow:** * Download the [Olist Dataset from Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
+   * Place `orders`, `payments`, `customers`, and `reviews` CSVs in the project folder.
+   * Install dependencies: `pip install pandas matplotlib seaborn numpy`.
+   * Run: `python ecommerce_analysis.py`.
+
+---
+**Author:** Rithika Harikrishna  
+[LinkedIn](https://linkedin.com/in/rithika-harikrishna) · [GitHub](https://github.com/rithikahaha)
