@@ -1,8 +1,6 @@
 # Scalable E-Commerce Analytics Pipeline
 > **A serverless AWS data pipeline and Python engine processing 100k+ records across 8 relational datasets to optimize Customer Lifetime Value (CLV) and Retention.**
 
-![CI Status](https://github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline/actions/workflows/ci.yml/badge.svg)
-
 ---
 
 ### Business Impact & Strategy
@@ -15,6 +13,8 @@ This project transitions from local data processing to a **Cloud-Native Architec
 ---
 
 ### CI/CD Pipeline
+![CI Status](https://github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline/actions/workflows/ci.yml/badge.svg)
+
 This project includes an automated CI pipeline using **GitHub Actions** that runs on every push to `main`.
 
 **Automated checks on every commit:**
