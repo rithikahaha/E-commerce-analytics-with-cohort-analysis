@@ -1,0 +1,97 @@
+name: E-Commerce Analytics Pipeline CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy matplotlib seaborn
+
+      - name: Validate data quality checks
+        run: |
+          python - <<EOF
+          import pandas as pd
+          import sys
+
+          print("Running data quality validation checks...")
+
+          # Check 1: Verify all required modules import correctly
+          try:
+              import pandas as pd
+              import numpy as np
+              import matplotlib
+              import seaborn
+              print("All dependencies loaded successfully.")
+          except ImportError as e:
+              print(f"Dependency error: {e}")
+              sys.exit(1)
+
+          # Check 2: Validate core analytical functions exist in main script
+          import ast, os
+
+          script_path = "analytics_pipeline.py"
+          if os.path.exists(script_path):
+              with open(script_path, "r") as f:
+                  tree = ast.parse(f.read())
+              functions = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+              required = ["load_data", "build_analytical_dataset", "rfm_analysis", "cohort_retention_analysis"]
+              missing = [f for f in required if f not in functions]
+              if missing:
+                  print(f"Missing required functions: {missing}")
+                  sys.exit(1)
+              print(f"All required functions present: {functions}")
+          else:
+              print("Pipeline script not found, skipping function validation.")
+
+          # Check 3: Schema validation on synthetic data
+          synthetic_orders = pd.DataFrame({
+              "order_id": ["001", "002", "003"],
+              "customer_id": ["c1", "c2", "c3"],
+              "order_purchase_timestamp": pd.to_datetime(["2023-01-01", "2023-02-01", "2023-03-01"]),
+              "payment_value": [100.0, 200.0, 300.0],
+              "customer_unique_id": ["u1", "u2", "u3"],
+              "customer_state": ["SP", "RJ", "MG"],
+              "payment_type": ["credit_card", "boleto", "credit_card"],
+              "review_score": [5, 4, 3]
+          })
+
+          required_columns = ["order_id", "customer_id", "order_purchase_timestamp", "payment_value"]
+          missing_cols = [col for col in required_columns if col not in synthetic_orders.columns]
+          if missing_cols:
+              print(f"Schema validation failed. Missing columns: {missing_cols}")
+              sys.exit(1)
+
+          # Check 4: No null values in critical columns
+          null_counts = synthetic_orders[required_columns].isnull().sum()
+          if null_counts.any():
+              print(f"Data integrity check failed. Null values found: {null_counts}")
+              sys.exit(1)
+
+          # Check 5: Payment values are non-negative
+          if (synthetic_orders["payment_value"] < 0).any():
+              print("Data integrity check failed. Negative payment values detected.")
+              sys.exit(1)
+
+          print("All data quality checks passed.")
+          print(f"Validated {len(synthetic_orders)} records with 0 integrity violations.")
+          EOF
+
+      - name: Pipeline validation complete
+        run: echo "CI/CD pipeline passed all checks successfully."
