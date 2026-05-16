@@ -1,6 +1,8 @@
 # Scalable E-Commerce Analytics Pipeline
 > **A serverless AWS data pipeline and Python engine processing 100k+ records across 8 relational datasets to optimize Customer Lifetime Value (CLV) and Retention.**
 
+![CI Status](https://github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline/actions/workflows/ci.yml/badge.svg)
+
 ---
 
 ### Business Impact & Strategy
@@ -9,6 +11,18 @@ This project transitions from local data processing to a **Cloud-Native Architec
 * **Retention Engineering:** Created a **Longitudinal Cohort Matrix** to identify exactly when customers "drop off," providing a quantitative baseline for automated re-engagement.
 * **Predictive Segmentation:** Automated an **RFM (Recency, Frequency, Monetary) Model** to segment 90k+ unique identities, isolating a "Champion" group that generates **4x the average revenue**.
 * **Cost-Optimized Scalability:** Architected a serverless Data Lake on **AWS**, decoupling storage from compute to enable high-velocity SQL querying with **near-zero infrastructure overhead**.
+
+---
+
+### CI/CD Pipeline
+This project includes an automated CI pipeline using **GitHub Actions** that runs on every push to `main`.
+
+**Automated checks on every commit:**
+- Dependency validation — confirms all libraries load correctly
+- Function existence check — verifies core pipeline functions are present
+- Schema validation — checks required columns exist in the data
+- Null value detection — flags missing data in critical fields
+- Data integrity check — catches negative payment values
 
 ---
 
@@ -23,6 +37,10 @@ This project transitions from local data processing to a **Cloud-Native Architec
 * **Python:** Core language for data processing and statistical modeling.
 * **Pandas & NumPy:** For complex relational joins across 8 datasets and mathematical correlations ($r=0.038$).
 * **Matplotlib & Seaborn:** For generating high-resolution behavioral analytics and executive reports.
+
+**DevOps & Quality**
+* **GitHub Actions:** Automated CI pipeline for data quality validation on every commit.
+* **Shell Scripting (Bash):** Used within CI workflow for dependency installation and pipeline execution.
 
 ---
 
@@ -87,7 +105,8 @@ The final output of the pipeline, labeling customers as **Champions, Loyal, At R
 
 ### Repository Structure & Setup
 1. **Cloud Workflow:** Upload `raw_data/` to S3 -> Run Glue Crawler -> Query via Athena SQL.
-2. **Local Workflow:** * Download the [Olist Dataset from Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
+2. **Local Workflow:**
+   * Download the [Olist Dataset from Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
    * Place `orders`, `payments`, `customers`, and `reviews` CSVs in the project folder.
    * Install dependencies: `pip install pandas matplotlib seaborn numpy`.
    * Run: `python ecommerce_analysis.py`.
